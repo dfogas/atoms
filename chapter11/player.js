@@ -10,6 +10,7 @@ Player.stopListening = function() {
   document.body.removeEventListener("click", Player);
 }
 
+// Co se stane, když hráč klikne myší
 Player.handleEvent = function(e) {
   var cursor = new XY(e.clientX, e.clientY);
   var position = Draw.getPosition(cursor);

@@ -20,6 +20,7 @@ Board.init = function() {
   }
 }
 
+// for draw and player components
 Board.getPlayer = function(xy) {
   return this._data[xy].player;
 }
