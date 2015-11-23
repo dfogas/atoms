@@ -28,6 +28,26 @@ Board.prototype._build = function() {
   }
 }
 
+Board.prototype.getScoreFor = function(player) {
+  var index = this._players.indexOf(player);
+  return this._score[index];
+}
+
+Board.prototype.clone = function() {
+  var clone = new Board(this._players, null);
+
+  clone._score = this._score.slice(0);
+
+  for (var p in this._data) {
+    var ourCell = this._data[p];
+    var cloneCell = clone._data[p];
+    cloneCell.atoms = ourCell.atoms;
+    cloneCell.player = ourCell.player;
+  }
+
+  return clone;
+}
+
 // for draw and player components
 Board.prototype.getPlayer = function(xy) {
   return this._data[xy].player;
@@ -51,7 +71,10 @@ Board.prototype._addAndCheck = function(xy, player) {
 
   cell.player = player;
   cell.atoms +=1;
-  this._draw.cell(xy, cell.atoms, cell.player);
+
+  /*nova podminka pro synchronni AI simulaci boardu*/
+  if (this._draw)
+    this._draw.cell(xy, cell.atoms, cell.player);
 
   if (cell.atoms > cell.limit) {
     // pokud už je ve frontě kritických
@@ -68,11 +91,11 @@ Board.prototype.addAtom = function(xy, player) {
   this._addAndCheck(xy, player);
 
   if (Game.isOver(this._score)) {
-    this.onTurnDone(this._score);
+    this.onTurnDone();
   } else if (this._criticals.length) {
     this._explode();
   } else {/*přidání bez rozpadu či konce hry*/
-    this.onTurnDone(this._score);
+    this.onTurnDone();
   }
 }
 
@@ -82,7 +105,9 @@ Board.prototype._explode = function() {
 
   var neighbors = xy.getNeighbors();
   cell.atoms -= neighbors.length;
-  this._draw.cell(xy, cell.atoms, cell.player);
+
+  if (this._draw)
+    this._draw.cell(xy);
 
   for (var i=0; i<neighbors.length; i+=1) {
     var n = neighbors[i];
@@ -90,10 +115,14 @@ Board.prototype._explode = function() {
   }
 
   if (Game.isOver(this._score)) {
-    this.onTurnDone(this._score);
+    this.onTurnDone();
   } else if (this._criticals.length) {
-    setTimeout(this._explode.bind(this), this.DELAY);
+    /*nova podminka pro synchronni AI simulaci boardu*/
+    if (this._draw)
+      setTimeout(this._explode.bind(this), this.DELAY);
+    else
+      this._explode();
   } else {
-    this.onTurnDone(this._score);
+    this.onTurnDone();
   }
 }
